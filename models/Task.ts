@@ -70,5 +70,22 @@ create(title: string, description: string): Task {
 
     return tasks[taskIndex];
 
-   }
+   },
+
+   toggleComplete(id: string): Task {
+    const tasks = TaskModel.getAll();
+
+     const taskIndex = tasks.findIndex(task => task.id === id);
+
+     if (taskIndex === -1) {
+      throw new Error('Task not found');
+    }
+
+    tasks[taskIndex].completed = !tasks[taskIndex].completed;
+
+    fs.writeFileSync(dbPath, JSON.stringify(tasks, null, 2));
+
+     return tasks[taskIndex];
+  }
+
 };
