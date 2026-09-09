@@ -43,8 +43,32 @@ create(title: string, description: string): Task {
       createdAt: new Date().toISOString()
     };
 
+
     tasks.push(newTask);
     fs.writeFileSync(dbPath, JSON.stringify(tasks, null, 2));
     return newTask;
-  }
+    },
+    
+    
+    update(id: string, title: string, description: string): Task {
+    const tasks = TaskModel.getAll();
+
+    const taskIndex = tasks.findIndex(task => task.id === id);
+
+    if (taskIndex === -1) {
+      throw new Error('Task not found');
+    }
+
+    if (!title.trim()) {
+       throw new Error('Task title is required');
+    }
+
+    tasks[taskIndex].title = title.trim();
+    tasks[taskIndex].description = description.trim();
+
+    fs.writeFileSync(dbPath, JSON.stringify(tasks, null, 2));
+
+    return tasks[taskIndex];
+
+   }
 };
