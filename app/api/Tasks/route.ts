@@ -1,29 +1,29 @@
+import { NextResponse } from 'next/server';
 import { TaskModel } from '@/models/Task';
 
-export async function PUT(request: Request) {
+// Obtiene todas las tareas registradas
+export async function GET() {
+  try {
+    const tasks = TaskModel.getAll();
+    return NextResponse.json(tasks, { status: 200 });
+  } catch (error) {
+    return NextResponse.json({ error: 'Error al obtener las tareas' }, { status: 500 });
+  }
+}
+
+// Crea una nueva tarea cuando el usuario presiona Enter
+export async function POST(request: Request) {
   try {
     const body = await request.json();
+    const { title } = body;
 
-    const { id, title, description } = body;
-
-    if (!id) {
-      return Response.json(
-        { error: 'Task id is required' },
-        { status: 400 }
-      );
+    if (!title) {
+      return NextResponse.json({ error: 'El título es obligatorio' }, { status: 400 });
     }
 
-    const updatedTask = TaskModel.update(
-      id,
-      title,
-      description
-    );
-
-     return Response.json(updatedTask);
+    const newTask = TaskModel.create(title, '');
+    return NextResponse.json(newTask, { status: 201 });
   } catch (error) {
-    return Response.json(
-      { error: error instanceof Error ? error.message : 'Error updating task' },
-      { status: 400 }
-    );
+    return NextResponse.json({ error: 'Error interno' }, { status: 500 });
   }
 }
