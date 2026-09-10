@@ -1,5 +1,10 @@
+
+"use client";
+
+
 'use client';
 import { useState, useEffect } from 'react';
+
 
 // 1. Estructura de datos para tipar las tareas con TypeScript
 interface Task {
@@ -10,29 +15,37 @@ interface Task {
   createdAt: string;
 }
 export default function Home() {
-  // 2. Definición de estados locales de la interfaz
-  const [tasks, setTasks] = useState<Task[]>([]); 
-  const [isCreating, setIsCreating] = useState(false); 
-  const [title, setTitle] = useState(''); 
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [editTitle, setEditTitle] = useState('');
-  const [editDescription, setEditDescription] = useState('');
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  // 3. Sincronización inicial al montar el componente en el navegador
-  
+// 2. Definición de estados locales de la interfaz
+const [tasks, setTasks] = useState<Task[]>([]);
+const [isCreating, setIsCreating] = useState(false);
+const [title, setTitle] = useState('');
+const [editingId, setEditingId] = useState<string | null>(null);
+const [editTitle, setEditTitle] = useState('');
+const [editDescription, setEditDescription] = useState('');
+const [loading, setLoading] = useState(true);
+const [error, setError] = useState("");
 
-  // Función para consultar las tareas existentes mediante GET a la API
-  const fetchTasks = async () => {
-    try {
-      const res = await fetch('/api/tasks');
-      if (res.ok) {
-        const data = await res.json();
-        setTasks(data);
-        setLoading(false);
-      } else {
-        setError('No se pudieron cargar las tareas');
-        setLoading(false);
+// 3. Sincronización inicial al montar el componente en el navegador
+
+// Función para consultar las tareas existentes mediante GET a la API
+const fetchTasks = async () => {
+  try {
+    const res = await fetch('/api/tasks');
+
+    if (res.ok) {
+      const data = await res.json();
+      setTasks(data);
+      setLoading(false);
+    } else {
+      setError('No se pudieron cargar las tareas');
+      setLoading(false);
+    }
+  } catch (error) {
+    console.error('Error al cargar tareas:', error);
+    setError('No se pudieron cargar las tareas');
+    setLoading(false);
+  }
+};
       }
       
     } catch (error) {
