@@ -1,7 +1,3 @@
-
-"use client";
-
-
 'use client';
 import { useState, useEffect } from 'react';
 
@@ -46,14 +42,7 @@ const fetchTasks = async () => {
     setLoading(false);
   }
 };
-      }
-      
-    } catch (error) {
-      console.error('Error al cargar tareas:', error);
-      setError('No se pudieron cargar las tareas');
-      setLoading(false);
-    }
-  };
+
   useEffect(() => {
   const loadTasks = async () => {
     await fetchTasks();
