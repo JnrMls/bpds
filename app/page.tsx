@@ -1,69 +1,286 @@
-import Image from "next/image";
+'use client';
+import { useState, useEffect } from 'react';
 
+
+// 1. Estructura de datos para tipar las tareas con TypeScript
+interface Task {
+  id: string;
+  title: string;
+  description: string;
+  completed: boolean;
+  createdAt: string;
+}
 export default function Home() {
-  return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            Hola, profe Kelly{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+// 2. Definición de estados locales de la interfaz
+const [tasks, setTasks] = useState<Task[]>([]);
+const [isCreating, setIsCreating] = useState(false);
+const [title, setTitle] = useState('');
+const [editingId, setEditingId] = useState<string | null>(null);
+const [editTitle, setEditTitle] = useState('');
+const [editDescription, setEditDescription] = useState('');
+const [loading, setLoading] = useState(true);
+const [error, setError] = useState("");
+
+// 3. Sincronización inicial al montar el componente en el navegador
+
+// Función para consultar las tareas existentes mediante GET a la API
+const fetchTasks = async () => {
+  try {
+    const res = await fetch('/api/tasks');
+
+    if (res.ok) {
+      const data = await res.json();
+      setTasks(data);
+      setLoading(false);
+    } else {
+      setError('No se pudieron cargar las tareas');
+      setLoading(false);
+    }
+  } catch (error) {
+    console.error('Error al cargar tareas:', error);
+    setError('No se pudieron cargar las tareas');
+    setLoading(false);
+  }
+};
+
+  useEffect(() => {
+  const loadTasks = async () => {
+    await fetchTasks();
+  };
+
+  loadTasks();
+}, []);
+
+  // Función para guardar los cambios de una tarea
+  const handleUpdate = async (id: string) => {
+    if (!editTitle.trim()) {
+      alert('El título es obligatorio');
+      return;
+    }
+
+    try {
+      const res = await fetch('/api/tasks', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id,
+          title: editTitle.trim(),
+          description: editDescription,
+          completed: false,
+        }),
+      });
+
+      if (res.ok) {
+        setEditingId(null);
+        setEditTitle('');
+        setEditDescription('');
+        fetchTasks();
+      } else {
+        const data = await res.json();
+        alert(data.error || 'No se pudo actualizar la tarea');
+      }
+    } catch (error) {
+      console.error('Error al actualizar la tarea:', error);
+    }
+  };
+
+  // 4. Lógica para detectar la tecla Enter y enviar los datos al servidor (POST)
+    const handleKeyDown = async (e: React.KeyboardEvent<HTMLInputElement>) => {
+      if (e.key === 'Enter' && title.trim() !== '') {
+        try {
+          const res = await fetch('/api/tasks', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ title, description: '' }),
+          });
+
+          if (res.ok) {
+            setTitle('');
+            setIsCreating(false);
+            fetchTasks(); // Actualiza automáticamente el listado inferior
+          }
+        } catch (error) {
+          console.error('Error al guardar la tarea:', error);
+          setError('No se pudieron cargar las tareas');
+          setLoading(false);
+        }
+      }
+    };
+
+      // Función para cambiar el estado de una tarea
+      const handleToggleComplete = async (task: Task) => {
+        try {
+          const res = await fetch('/api/tasks', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              id: task.id,
+              title: task.title,
+              description: task.description,
+              completed: !task.completed,
+            }),
+          });
+
+          if (res.ok) {
+            fetchTasks();
+          }
+        } catch (error) {
+          console.error('Error al cambiar el estado de la tarea:', error);
+        }
+      };
+      // Función para eliminar una tarea
+        const handleDelete = async (id: string) => {
+      try {
+        const res = await fetch(`/api/tasks?id=${id}`, {
+          method: 'DELETE',
+        });
+
+        if (res.ok) {
+          fetchTasks();
+        } else {
+          let errorMsg = 'No se pudo eliminar la tarea';
+          try {
+            const data = await res.json();
+            if (data.error) {
+              errorMsg = data.error;
+            }
+          } catch (e) {
+            // Ignorar si la respuesta no es un JSON válido
+          }
+          alert(errorMsg);
+        }
+      } catch (error) {
+        console.error('Error al eliminar la tarea:', error);
+      }
+    };
+      if (loading) {
+        return <p>Cargando tareas...</p>;
+      }
+
+      if (error) {
+        return <p>{error}</p>;
+      }
+    return (
+    <main className="min-h-screen w-full bg-white dark:bg-slate-900 p-8 max-w-4xl mx-auto transition-colors">
+      <h1 className="text-2xl font-bold mb-6 text-black dark:text-white">Gestor de Tareas</h1>
+
+      {/* 5. Sección superior: Texto opaco interactivo por doble clic */}
+      <div className="mb-8">
+        {!isCreating ? (
+          <p
+            onDoubleClick={() => setIsCreating(true)}
+            className="text-gray-400 dark:text-gray-500 italic cursor-pointer select-none py-2 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+          >
+            Doble clic para añadir una nueva tarea (escribe y dale Enter)...
           </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+        ) : (
+          <input
+            type="text"
+            autoFocus
+            placeholder="Escribe tu tarea para hacer y dale Enter..."
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            onKeyDown={handleKeyDown}
+            onBlur={() => setIsCreating(false)}
+            className="border-b-2 border-blue-500 bg-transparent py-2 w-full text-black dark:text-white outline-none text-lg"
+          />
+        )}
+      </div>
+
+      {/* 6. Sección inferior: Renderizado dinámico de la lista de tareas */}
+      <div className="space-y-3">
+        <h2 className="text-lg font-semibold text-gray-700 dark:text-gray-300">Tareas Agregadas</h2>
+        {tasks.length === 0 ? (
+          <p className="text-gray-400 dark:text-gray-500 text-sm">No hay tareas creadas todavía.</p>
+        ) : (
+          tasks.map((task) => (
+            <div 
+              key={task.id}
+              className="border border-gray-200 dark:border-zinc-800 p-4 rounded-lg shadow-sm bg-white dark:bg-zinc-900"
+            >
+              {editingId === task.id ? (
+                <div className="space-y-3">
+                  <input
+                    type="text"
+                    value={editTitle}
+                    onChange={(e) => setEditTitle(e.target.value)}
+                    className="border rounded p-2 w-full text-black"
+                    placeholder="Título de la tarea"
+                  />
+
+                  <input
+                    type="text"
+                    value={editDescription}
+                    onChange={(e) => setEditDescription(e.target.value)}
+                    className="border rounded p-2 w-full text-black"
+                    placeholder="Descripción"
+                  />
+
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => handleUpdate(task.id)}
+                      className="px-3 py-1 bg-blue-500 text-white rounded"
+                    >
+                      Guardar
+                    </button>
+
+                    <button
+                      onClick={() => setEditingId(null)}
+                      className="px-3 py-1 bg-gray-300 text-black rounded"
+                    >
+                      Cancelar
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                <input
+                  type="checkbox"
+                  checked={task.completed}
+                  onChange={() => handleToggleComplete(task)}
+                  className="h-4 w-4 rounded border-gray-300 cursor-pointer accent-blue-500"
+                />
+                <p className={`font-medium transition-all ${task.completed ? 'line-through text-gray-400 dark:text-gray-600' : 'text-black dark:text-white'}`}>
+                  {task.title}
+                </p>
+              </div>
+
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => {
+                          setEditingId(task.id);
+                          setEditTitle(task.title);
+                          setEditDescription(task.description);
+                        }}
+                        className="px-3 py-1 bg-gray-200 text-black rounded"
+                      >
+                        Editar
+                      </button>
+
+                      <button
+                        onClick={() => handleDelete(task.id)}
+                        className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
+                      >
+                        Eliminar
+                      </button>
+                    </div>
+                  </div>
+
+                  <p className="text-gray-600 dark:text-gray-400">
+                    {task.description}
+                  </p>
+
+                  <p className="text-gray-600 dark:text-gray-400">
+                    Estado: {task.completed ? 'Completada' : 'Pendiente'}
+                  </p>
+                </>
+              )}
+            </div>
+          ))
+        )}
+      </div>
+    </main>
   );
 }
