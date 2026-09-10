@@ -161,7 +161,7 @@ const fetchTasks = async () => {
         return <p>{error}</p>;
       }
     return (
-    <main className="p-8 max-w-lg mx-auto">
+    <main className="min-h-screen w-full bg-white dark:bg-slate-900 p-8 max-w-4xl mx-auto transition-colors">
       <h1 className="text-2xl font-bold mb-6 text-black dark:text-white">Gestor de Tareas</h1>
 
       {/* 5. Sección superior: Texto opaco interactivo por doble clic */}
@@ -235,9 +235,17 @@ const fetchTasks = async () => {
               ) : (
                 <>
                   <div className="flex items-center justify-between">
-                    <p className="font-medium text-black dark:text-white">
-                      {task.title}
-                    </p>
+                    <div className="flex items-center gap-3">
+                <input
+                  type="checkbox"
+                  checked={task.completed}
+                  onChange={() => handleToggleComplete(task)}
+                  className="h-4 w-4 rounded border-gray-300 cursor-pointer accent-blue-500"
+                />
+                <p className={`font-medium transition-all ${task.completed ? 'line-through text-gray-400 dark:text-gray-600' : 'text-black dark:text-white'}`}>
+                  {task.title}
+                </p>
+              </div>
 
                     <div className="flex gap-2">
                       <button
@@ -251,13 +259,6 @@ const fetchTasks = async () => {
                         Editar
                       </button>
 
-                      <button
-                        onClick={() => handleToggleComplete(task)}
-                        className="px-3 py-1 bg-green-500 text-white rounded"
-                      >
-                        {task.completed ? 'Marcar pendiente' : 'Completar'}
-                      </button>
-                      
                       <button
                         onClick={() => handleDelete(task.id)}
                         className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
