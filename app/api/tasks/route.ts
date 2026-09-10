@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 import { TaskModel } from '@/models/Task';
+import path from 'path'
+import fs from 'fs'
 
 // Obtiene todas las tareas registradas
 export async function GET() {
@@ -68,5 +70,32 @@ export async function PUT(request: Request) {
       { error: 'Error interno' },
       { status: 500 }
     );
+  }
+}
+
+export async function DELETE(request: Request) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get('id');
+
+    if (!id) {
+      return NextResponse.json({ error: 'ID no proporcionado' }, { status: 400 });
+    }
+
+    const filePath = path.join(process.cwd(), 'data', 'tasks.json');
+    if (!fs.existsSync(filePath)) {
+      return NextResponse.json({ error: 'No hay datos' }, { status: 404 });
+    }
+
+    const fileData = fs.readFileSync(filePath, 'utf8');
+    let tasks = JSON.parse(fileData);
+
+    const filteredTasks = tasks.filter((task: any) => task.id !== id);
+
+    fs.writeFileSync(filePath, JSON.stringify(filteredTasks, null, 2));
+
+    return NextResponse.json({ message: 'Tarea eliminada con éxito' });
+  } catch (error) {
+    return NextResponse.json({ error: 'Error al eliminar la tarea' }, { status: 500 });
   }
 }

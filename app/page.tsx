@@ -128,7 +128,31 @@ const fetchTasks = async () => {
           console.error('Error al cambiar el estado de la tarea:', error);
         }
       };
+      // Función para eliminar una tarea
+        const handleDelete = async (id: string) => {
+      try {
+        const res = await fetch(`/api/tasks?id=${id}`, {
+          method: 'DELETE',
+        });
 
+        if (res.ok) {
+          fetchTasks();
+        } else {
+          let errorMsg = 'No se pudo eliminar la tarea';
+          try {
+            const data = await res.json();
+            if (data.error) {
+              errorMsg = data.error;
+            }
+          } catch (e) {
+            // Ignorar si la respuesta no es un JSON válido
+          }
+          alert(errorMsg);
+        }
+      } catch (error) {
+        console.error('Error al eliminar la tarea:', error);
+      }
+    };
       if (loading) {
         return <p>Cargando tareas...</p>;
       }
@@ -232,6 +256,13 @@ const fetchTasks = async () => {
                         className="px-3 py-1 bg-green-500 text-white rounded"
                       >
                         {task.completed ? 'Marcar pendiente' : 'Completar'}
+                      </button>
+                      
+                      <button
+                        onClick={() => handleDelete(task.id)}
+                        className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
+                      >
+                        Eliminar
                       </button>
                     </div>
                   </div>
