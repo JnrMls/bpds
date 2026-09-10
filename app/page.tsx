@@ -235,9 +235,17 @@ const fetchTasks = async () => {
               ) : (
                 <>
                   <div className="flex items-center justify-between">
-                    <p className="font-medium text-black dark:text-white">
-                      {task.title}
-                    </p>
+                    <div className="flex items-center gap-3">
+                <input
+                  type="checkbox"
+                  checked={task.completed}
+                  onChange={() => handleToggleComplete(task)}
+                  className="h-4 w-4 rounded border-gray-300 cursor-pointer accent-blue-500"
+                />
+                <p className={`font-medium transition-all ${task.completed ? 'line-through text-gray-400 dark:text-gray-600' : 'text-black dark:text-white'}`}>
+                  {task.title}
+                </p>
+              </div>
 
                     <div className="flex gap-2">
                       <button
@@ -250,7 +258,7 @@ const fetchTasks = async () => {
                       >
                         Editar
                       </button>
-                      
+
                       <button
                         onClick={() => handleDelete(task.id)}
                         className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
