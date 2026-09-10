@@ -160,9 +160,8 @@ const fetchTasks = async () => {
       if (error) {
         return <p>{error}</p>;
       }
-      
     return (
-    <main className="min-h-screen bg-white dark:bg-slate-900 p-8 max-w-4xl mx-auto transition-colors">
+    <main className="min-h-screen w-full bg-white dark:bg-slate-900 p-8 max-w-4xl mx-auto transition-colors">
       <h1 className="text-2xl font-bold mb-6 text-black dark:text-white">Gestor de Tareas</h1>
 
       {/* 5. Sección superior: Texto opaco interactivo por doble clic */}
