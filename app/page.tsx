@@ -250,13 +250,6 @@ const fetchTasks = async () => {
                       >
                         Editar
                       </button>
-
-                      <button
-                        onClick={() => handleToggleComplete(task)}
-                        className="px-3 py-1 bg-green-500 text-white rounded"
-                      >
-                        {task.completed ? 'Marcar pendiente' : 'Completar'}
-                      </button>
                       
                       <button
                         onClick={() => handleDelete(task.id)}
