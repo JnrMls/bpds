@@ -46,5 +46,22 @@ create(title: string, description: string): Task {
     tasks.push(newTask);
     fs.writeFileSync(dbPath, JSON.stringify(tasks, null, 2));
     return newTask;
+  },
+
+  delete(id: string): boolean {
+    const tasks = TaskModel.getAll();
+
+    const filteredTasks = tasks.filter((task) => task.id !== id);
+
+    if (filteredTasks.length === tasks.length) {
+      return false;
   }
+
+  fs.writeFileSync(
+    dbPath,
+    JSON.stringify(filteredTasks, null, 2)
+  );
+
+  return true;
+}
 };
