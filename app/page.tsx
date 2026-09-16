@@ -13,6 +13,7 @@ interface Task {
 export default function Home() {
 // 2. Definición de estados locales de la interfaz
 const [tasks, setTasks] = useState<Task[]>([]);
+const [deletedTasks, setDeletedTasks] = useState<Task[]>([]);
 const [activeTab, setActiveTab] = useState<'active' | 'deleted'>('active');
 const [isCreating, setIsCreating] = useState(false);
 const [title, setTitle] = useState('');
@@ -306,10 +307,32 @@ const fetchTasks = async () => {
           ))
         )
       ) : (
+      
+      deletedTasks.length === 0 ? (
         <p className="text-gray-400 dark:text-gray-500 text-sm">
           No hay tareas eliminadas todavía.
-        </p>  
-      )}
+        </p>
+      ) : (
+        deletedTasks.map((task) => (
+          <div
+            key={task.id}
+            className="border border-gray-200 dark:border-zinc-800 p-4 rounded-lg shadow-sm bg-white dark:bg-zinc-900"
+          >
+            <p className="font-medium text-black dark:text-white">
+              {task.title}  
+            </p>
+
+            <p className="text-gray-600 dark:text-gray-400">
+              {task.description}
+            </p>
+
+            <p className="text-gray-600 dark:text-gray-400">
+              Estado: {task.completed ? 'Completada' : 'Pendiente'}
+            </p>  
+          </div> 
+        ))
+        )
+      )}     
       </div>
     </main>
   );
