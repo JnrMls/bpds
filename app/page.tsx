@@ -316,17 +316,25 @@ const fetchTasks = async () => {
         deletedTasks.map((task) => (
           <div
             key={task.id}
-            className="border border-gray-200 dark:border-zinc-800 p-4 rounded-lg shadow-sm bg-white dark:bg-zinc-900"
+              className="border border-gray-200 dark:border-zinc-800 p-4 rounded-lg shadow-sm bg-gray-50 dark:bg-zinc-800"
           >
-            <p className="font-medium text-black dark:text-white">
-              {task.title}  
-            </p>
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">  
+                <span className="text-gray-500">🗑️</span>
+                <p className="font-medium text-gray-700 dark:text-gray-300">
+                  {task.title}
+                </p>
+              </div>
+              <span className="text-sm text-gray-500 dark:text-gray-400">
+                Eliminada
+              </span>
+            </div>
 
             <p className="text-gray-600 dark:text-gray-400">
               {task.description}
             </p>
 
-            <p className="text-gray-600 dark:text-gray-400">
+            <p className="text-gray-600 dark:text-gray-400 mt-1">
               Estado: {task.completed ? 'Completada' : 'Pendiente'}
             </p>  
           </div> 
