@@ -13,6 +13,7 @@ interface Task {
 export default function Home() {
 // 2. Definición de estados locales de la interfaz
 const [tasks, setTasks] = useState<Task[]>([]);
+const [activeTab, setActiveTab] = useState<'active' | 'deleted'>('active');
 const [isCreating, setIsCreating] = useState(false);
 const [title, setTitle] = useState('');
 const [editingId, setEditingId] = useState<string | null>(null);
@@ -189,8 +190,32 @@ const fetchTasks = async () => {
 
       {/* 6. Sección inferior: Renderizado dinámico de la lista de tareas */}
       <div className="space-y-3">
-        <h2 className="text-lg font-semibold text-gray-700 dark:text-gray-300">Tareas Agregadas</h2>
-        {tasks.length === 0 ? (
+        <div className="flex border-b border-gray-200 dark:border-zinc-700">
+          <button
+            onClick={() => setActiveTab('active')}
+            className={`px-4 py-2 font-medium ${
+              activeTab === 'active'
+                ? 'border-b-2 border-blue-500 text-blue-600'
+                : 'text-gray-500'
+            }`}  
+        >
+          Tareas Agregadas
+        </button> 
+
+        <button 
+          onClick={() => setActiveTab('deleted')}
+          className={`px-4 py-2 font-medium ${
+            activeTab === 'deleted'
+              ? 'border-b-2 border-blue-500 text-blue-600'
+              : 'text-gray-500'
+          }`}
+        >
+          Tareas Eliminadas  
+        </button>     
+      </div>
+
+      {activeTab === 'active' ? (
+        tasks.length === 0 ? (
           <p className="text-gray-400 dark:text-gray-500 text-sm">No hay tareas creadas todavía.</p>
         ) : (
           tasks.map((task) => (
@@ -279,7 +304,12 @@ const fetchTasks = async () => {
               )}
             </div>
           ))
-        )}
+        )
+      ) : (
+        <p className="text-gray-400 dark:text-gray-500 text-sm">
+          No hay tareas eliminadas todavía.
+        </p>  
+      )}
       </div>
     </main>
   );
