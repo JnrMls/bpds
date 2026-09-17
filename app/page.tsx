@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 
+
 // 1. Estructura de datos para tipar las tareas con TypeScript
 interface Task {
   id: string;
@@ -10,37 +11,40 @@ interface Task {
   createdAt: string;
 }
 export default function Home() {
-  // 2. Definición de estados locales de la interfaz
-  const [tasks, setTasks] = useState<Task[]>([]); 
-  const [isCreating, setIsCreating] = useState(false); 
-  const [title, setTitle] = useState(''); 
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [editTitle, setEditTitle] = useState('');
-  const [editDescription, setEditDescription] = useState('');
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  // 3. Sincronización inicial al montar el componente en el navegador
-  
+// 2. Definición de estados locales de la interfaz
+const [tasks, setTasks] = useState<Task[]>([]);
+const [deletedTasks, setDeletedTasks] = useState<Task[]>([]);
+const [activeTab, setActiveTab] = useState<'active' | 'deleted'>('active');
+const [isCreating, setIsCreating] = useState(false);
+const [title, setTitle] = useState('');
+const [editingId, setEditingId] = useState<string | null>(null);
+const [editTitle, setEditTitle] = useState('');
+const [editDescription, setEditDescription] = useState('');
+const [loading, setLoading] = useState(true);
+const [error, setError] = useState("");
 
-  // Función para consultar las tareas existentes mediante GET a la API
-  const fetchTasks = async () => {
-    try {
-      const res = await fetch('/api/tasks');
-      if (res.ok) {
-        const data = await res.json();
-        setTasks(data);
-        setLoading(false);
-      } else {
-        setError('No se pudieron cargar las tareas');
-        setLoading(false);
-      }
-      
-    } catch (error) {
-      console.error('Error al cargar tareas:', error);
+// 3. Sincronización inicial al montar el componente en el navegador
+
+// Función para consultar las tareas existentes mediante GET a la API
+const fetchTasks = async () => {
+  try {
+    const res = await fetch('/api/tasks');
+
+    if (res.ok) {
+      const data = await res.json();
+      setTasks(data);
+      setLoading(false);
+    } else {
       setError('No se pudieron cargar las tareas');
       setLoading(false);
     }
-  };
+  } catch (error) {
+    console.error('Error al cargar tareas:', error);
+    setError('No se pudieron cargar las tareas');
+    setLoading(false);
+  }
+};
+
   useEffect(() => {
   const loadTasks = async () => {
     await fetchTasks();
@@ -126,7 +130,31 @@ export default function Home() {
           console.error('Error al cambiar el estado de la tarea:', error);
         }
       };
+      // Función para eliminar una tarea
+        const handleDelete = async (id: string) => {
+      try {
+        const res = await fetch(`/api/tasks?id=${id}`, {
+          method: 'DELETE',
+        });
 
+        if (res.ok) {
+          fetchTasks();
+        } else {
+          let errorMsg = 'No se pudo eliminar la tarea';
+          try {
+            const data = await res.json();
+            if (data.error) {
+              errorMsg = data.error;
+            }
+          } catch (e) {
+            // Ignorar si la respuesta no es un JSON válido
+          }
+          alert(errorMsg);
+        }
+      } catch (error) {
+        console.error('Error al eliminar la tarea:', error);
+      }
+    };
       if (loading) {
         return <p>Cargando tareas...</p>;
       }
@@ -135,7 +163,7 @@ export default function Home() {
         return <p>{error}</p>;
       }
     return (
-    <main className="p-8 max-w-lg mx-auto">
+    <main className="min-h-screen w-full bg-white dark:bg-slate-900 p-8 max-w-4xl mx-auto transition-colors">
       <h1 className="text-2xl font-bold mb-6 text-black dark:text-white">Gestor de Tareas</h1>
 
       {/* 5. Sección superior: Texto opaco interactivo por doble clic */}
@@ -163,8 +191,32 @@ export default function Home() {
 
       {/* 6. Sección inferior: Renderizado dinámico de la lista de tareas */}
       <div className="space-y-3">
-        <h2 className="text-lg font-semibold text-gray-700 dark:text-gray-300">Tareas Agregadas</h2>
-        {tasks.length === 0 ? (
+        <div className="flex border-b border-gray-200 dark:border-zinc-700">
+          <button
+            onClick={() => setActiveTab('active')}
+            className={`px-4 py-2 font-medium ${
+              activeTab === 'active'
+                ? 'border-b-2 border-blue-500 text-blue-600'
+                : 'text-gray-500'
+            }`}  
+        >
+          Tareas Agregadas
+        </button> 
+
+        <button 
+          onClick={() => setActiveTab('deleted')}
+          className={`px-4 py-2 font-medium ${
+            activeTab === 'deleted'
+              ? 'border-b-2 border-blue-500 text-blue-600'
+              : 'text-gray-500'
+          }`}
+        >
+          Tareas Eliminadas  
+        </button>     
+      </div>
+
+      {activeTab === 'active' ? (
+        tasks.length === 0 ? (
           <p className="text-gray-400 dark:text-gray-500 text-sm">No hay tareas creadas todavía.</p>
         ) : (
           tasks.map((task) => (
@@ -209,6 +261,7 @@ export default function Home() {
               ) : (
                 <>
                   <div className="flex items-center justify-between">
+ ft/uiCreateTask
                     <p
                     onDoubleClick={() => {
                     setEditingId(task.id);
@@ -220,14 +273,26 @@ export default function Home() {
                     {task.title}
                     </p>
 
+                    <div className="flex items-center gap-3">
+                <input
+                  type="checkbox"
+                  checked={task.completed}
+                  onChange={() => handleToggleComplete(task)}
+                  className="h-4 w-4 rounded border-gray-300 cursor-pointer accent-blue-500"
+                />
+                <p className={`font-medium transition-all ${task.completed ? 'line-through text-gray-400 dark:text-gray-600' : 'text-black dark:text-white'}`}>
+                  {task.title}
+                </p>
+              </div>
+
                     <div className="flex gap-2">
                       
 
                       <button
-                        onClick={() => handleToggleComplete(task)}
-                        className="px-3 py-1 bg-green-500 text-white rounded"
+                        onClick={() => handleDelete(task.id)}
+                        className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
                       >
-                        {task.completed ? 'Marcar pendiente' : 'Completar'}
+                        Eliminar
                       </button>
                     </div>
                   </div>
@@ -243,7 +308,42 @@ export default function Home() {
               )}
             </div>
           ))
-        )}
+        )
+      ) : (
+      
+      deletedTasks.length === 0 ? (
+        <p className="text-gray-400 dark:text-gray-500 text-sm">
+          No hay tareas eliminadas todavía.
+        </p>
+      ) : (
+        deletedTasks.map((task) => (
+          <div
+            key={task.id}
+              className="border border-gray-200 dark:border-zinc-800 p-4 rounded-lg shadow-sm bg-gray-50 dark:bg-zinc-800"
+          >
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">  
+                <span className="text-gray-500">🗑️</span>
+                <p className="font-medium text-gray-700 dark:text-gray-300">
+                  {task.title}
+                </p>
+              </div>
+              <span className="text-sm text-gray-500 dark:text-gray-400">
+                Eliminada
+              </span>
+            </div>
+
+            <p className="text-gray-600 dark:text-gray-400">
+              {task.description}
+            </p>
+
+            <p className="text-gray-600 dark:text-gray-400 mt-1">
+              Estado: {task.completed ? 'Completada' : 'Pendiente'}
+            </p>  
+          </div> 
+        ))
+        )
+      )}     
       </div>
     </main>
   );
