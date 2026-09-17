@@ -64,7 +64,7 @@ export default function Home() {
           id,
           title: editTitle.trim(),
           description: editDescription,
-          completed: false,
+          completed: tasks.find((task) => task.id === id)?.completed ?? false,
         }),
       });
 
@@ -209,21 +209,19 @@ export default function Home() {
               ) : (
                 <>
                   <div className="flex items-center justify-between">
-                    <p className="font-medium text-black dark:text-white">
-                      {task.title}
+                    <p
+                    onDoubleClick={() => {
+                    setEditingId(task.id);
+                    setEditTitle(task.title);
+                    setEditDescription(task.description);
+                    }}
+                    className="font-medium text-black dark:text-white cursor-pointer select-none"
+                    >
+                    {task.title}
                     </p>
 
                     <div className="flex gap-2">
-                      <button
-                        onClick={() => {
-                          setEditingId(task.id);
-                          setEditTitle(task.title);
-                          setEditDescription(task.description);
-                        }}
-                        className="px-3 py-1 bg-gray-200 text-black rounded"
-                      >
-                        Editar
-                      </button>
+                      
 
                       <button
                         onClick={() => handleToggleComplete(task)}
