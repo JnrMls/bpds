@@ -33,33 +33,6 @@ export default function Home() {
   const [editTitle, setEditTitle] = useState('');
   const [editDescription, setEditDescription] = useState('');
 
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-
-  // Cargar tareas desde la API
-  const fetchTasks = async () => {
-    try {
-      setError('');
-
-      const res = await fetch('/api/tasks');
-
-      if (!res.ok) {
-        throw new Error('No se pudieron cargar las tareas');
-      }
-
-      const data = await res.json();
-      setTasks(data);
-    } catch (err) {
-      console.error('Error al cargar tareas:', err);
-      setError('No se pudieron cargar las tareas');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchTasks();
-  }, []);
 
   // Crear tarea con Enter
   const handleKeyDown = async (
@@ -239,14 +212,6 @@ export default function Home() {
 
     return parsedDate.toLocaleDateString('es-CO');
   };
-
-  if (loading) {
-    return <p className="p-8">Cargando tareas...</p>;
-  }
-
-  if (error) {
-    return <p className="p-8 text-red-500">{error}</p>;
-  }
 
   return (
     <main className="min-h-screen w-full max-w-4xl mx-auto bg-white dark:bg-slate-900 p-8 transition-colors">
