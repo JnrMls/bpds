@@ -35,7 +35,7 @@ export default function Home() {
 
 
   // Crear tarea con Enter
-    const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key !== 'Enter' || !title.trim()) return;
 
     const newTask: Task = {
@@ -52,7 +52,7 @@ export default function Home() {
   };
   
   // Actualizar tarea
-    const handleUpdate = (id: string) => {
+  const handleUpdate = (id: string) => {
     if (!editTitle.trim()) {
       alert('El título es obligatorio');
       return;
@@ -72,7 +72,7 @@ export default function Home() {
   };
 
   // Cambiar estado completada/pendiente
-    const handleToggleComplete = (task: Task) => {
+  const handleToggleComplete = (task: Task) => {
     setTasks((prev) =>
       prev.map((t) =>
         t.id === task.id ? { ...t, completed: !t.completed } : t
@@ -81,61 +81,26 @@ export default function Home() {
   };
 
     // Eliminar tarea
-    const handleDelete = async (id: string) => {
-      const taskToDelete = tasks.find((task) => task.id === id);
+    const handleDelete = (id: string) => {
+  const taskToDelete = tasks.find((task) => task.id === id);
+  if (!taskToDelete) return;
 
-      if (!taskToDelete) {
-        return;
-      }
+  const confirmed = window.confirm(
+    '¿Estás seguro de que deseas eliminar esta tarea?'
+  );
+  if (!confirmed) return;
 
-      const confirmed = window.confirm(
-        '¿Estás seguro de que deseas eliminar esta tarea?'
-      );
-
-      if (!confirmed) {
-        return;
-      }
-
-      try {
-        const res = await fetch(`/api/tasks?id=${id}`, {
-          method: 'DELETE',
-        });
-
-      if (!res.ok) {
-        let errorMsg = 'No se pudo eliminar la tarea';
-
-        try {
-          const data = await res.json();
-
-          if (data?.error) {
-            errorMsg = data.error;
-          }
-        } catch {
-          // La API no devolvió JSON
-        }
-
-        alert(errorMsg);
-        return;
-      }
-
-      // Guardamos una copia local de la tarea eliminada
-      const deletedTask: DeletedTask = {
-        id: taskToDelete.id,
-        title: taskToDelete.title,
-        description:
-          taskToDelete.description || 'Sin descripción',
-        completed: taskToDelete.completed,
-        createdAt: taskToDelete.createdAt,
-      };
-
-      setDeletedTasks((prev) => [...prev, deletedTask]);
-
-      await fetchTasks();
-    } catch (err) {
-      console.error('Error al eliminar la tarea:', err);
-      alert('Ocurrió un error al eliminar la tarea');
-    }
+  const deletedTask: DeletedTask = {
+    id: taskToDelete.id,
+    title: taskToDelete.title,
+    description: taskToDelete.description || 'Sin descripción',
+    completed: taskToDelete.completed,
+    createdAt: taskToDelete.createdAt,
   };
+
+  setDeletedTasks((prev) => [...prev, deletedTask]);
+  setTasks((prev) => prev.filter((task) => task.id !== id));
+} 
 
   // Formatear fecha
   const formatDate = (date?: string) => {
