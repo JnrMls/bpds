@@ -52,97 +52,54 @@ export default function Home() {
   };
   
   // Actualizar tarea
-  const handleUpdate = async (id: string) => {
+    const handleUpdate = (id: string) => {
     if (!editTitle.trim()) {
       alert('El título es obligatorio');
       return;
     }
 
-    const task = tasks.find((task) => task.id === id);
+    setTasks((prev) =>
+      prev.map((task) =>
+        task.id === id
+          ? { ...task, title: editTitle.trim(), description: editDescription }
+          : task
+      )
+    );
 
-    if (!task) {
-      return;
-    }
-
-    try {
-      const res = await fetch('/api/tasks', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          id,
-          title: editTitle.trim(),
-          description: editDescription,
-          completed: task.completed,
-        }),
-      });
-
-      if (!res.ok) {
-        const data = await res.json().catch(() => null);
-        alert(data?.error || 'No se pudo actualizar la tarea');
-        return;
-      }
-
-      setEditingId(null);
-      setEditTitle('');
-      setEditDescription('');
-
-      await fetchTasks();
-    } catch (err) {
-      console.error('Error al actualizar la tarea:', err);
-      alert('No se pudo actualizar la tarea');
-    }
+    setEditingId(null);
+    setEditTitle('');
+    setEditDescription('');
   };
 
   // Cambiar estado completada/pendiente
-  const handleToggleComplete = async (task: Task) => {
-    try {
-      const res = await fetch('/api/tasks', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          id: task.id,
-          title: task.title,
-          description: task.description,
-          completed: !task.completed,
-        }),
-      });
+    const handleToggleComplete = (task: Task) => {
+    setTasks((prev) =>
+      prev.map((t) =>
+        t.id === task.id ? { ...t, completed: !t.completed } : t
+      )
+    );
+  };
 
-      if (!res.ok) {
-        const data = await res.json().catch(() => null);
-        alert(data?.error || 'No se pudo cambiar el estado');
+    // Eliminar tarea
+    const handleDelete = async (id: string) => {
+      const taskToDelete = tasks.find((task) => task.id === id);
+
+      if (!taskToDelete) {
         return;
       }
 
-      await fetchTasks();
-    } catch (err) {
-      console.error('Error al cambiar el estado:', err);
-    }
-  };
+      const confirmed = window.confirm(
+        '¿Estás seguro de que deseas eliminar esta tarea?'
+      );
 
-  // Eliminar tarea
-  const handleDelete = async (id: string) => {
-    const taskToDelete = tasks.find((task) => task.id === id);
+      if (!confirmed) {
+        return;
+      }
 
-    if (!taskToDelete) {
-      return;
-    }
-
-    const confirmed = window.confirm(
-      '¿Estás seguro de que deseas eliminar esta tarea?'
-    );
-
-    if (!confirmed) {
-      return;
-    }
-
-    try {
-      const res = await fetch(`/api/tasks?id=${id}`, {
-        method: 'DELETE',
-      });
+      try {
+        const res = await fetch(`/api/tasks?id=${id}`, {
+          method: 'DELETE',
+        });
 
       if (!res.ok) {
         let errorMsg = 'No se pudo eliminar la tarea';
