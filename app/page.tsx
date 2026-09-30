@@ -33,197 +33,74 @@ export default function Home() {
   const [editTitle, setEditTitle] = useState('');
   const [editDescription, setEditDescription] = useState('');
 
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-
-  // Cargar tareas desde la API
-  const fetchTasks = async () => {
-    try {
-      setError('');
-
-      const res = await fetch('/api/tasks');
-
-      if (!res.ok) {
-        throw new Error('No se pudieron cargar las tareas');
-      }
-
-      const data = await res.json();
-      setTasks(data);
-    } catch (err) {
-      console.error('Error al cargar tareas:', err);
-      setError('No se pudieron cargar las tareas');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchTasks();
-  }, []);
 
   // Crear tarea con Enter
-  const handleKeyDown = async (
-    e: React.KeyboardEvent<HTMLInputElement>
-  ) => {
-    if (e.key !== 'Enter' || !title.trim()) {
-      return;
-    }
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key !== 'Enter' || !title.trim()) return;
 
-    try {
-      const res = await fetch('/api/tasks', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          title: title.trim(),
-          description: '',
-        }),
-      });
+    const newTask: Task = {
+      id: Date.now().toString(),
+      title: title.trim(),
+      description: '',
+      completed: false,
+      createdAt: new Date().toISOString(),
+    };
 
-      if (!res.ok) {
-        const data = await res.json().catch(() => null);
-        alert(data?.error || 'No se pudo crear la tarea');
-        return;
-      }
-
-      setTitle('');
-      setIsCreating(false);
-      await fetchTasks();
-    } catch (err) {
-      console.error('Error al guardar la tarea:', err);
-      alert('No se pudo crear la tarea');
-    }
+    setTasks((prev) => [...prev, newTask]);
+    setTitle('');
+    setIsCreating(false);
   };
-
+  
   // Actualizar tarea
-  const handleUpdate = async (id: string) => {
+  const handleUpdate = (id: string) => {
     if (!editTitle.trim()) {
       alert('El título es obligatorio');
       return;
     }
 
-    const task = tasks.find((task) => task.id === id);
+    setTasks((prev) =>
+      prev.map((task) =>
+        task.id === id
+          ? { ...task, title: editTitle.trim(), description: editDescription }
+          : task
+      )
+    );
 
-    if (!task) {
-      return;
-    }
-
-    try {
-      const res = await fetch('/api/tasks', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          id,
-          title: editTitle.trim(),
-          description: editDescription,
-          completed: task.completed,
-        }),
-      });
-
-      if (!res.ok) {
-        const data = await res.json().catch(() => null);
-        alert(data?.error || 'No se pudo actualizar la tarea');
-        return;
-      }
-
-      setEditingId(null);
-      setEditTitle('');
-      setEditDescription('');
-
-      await fetchTasks();
-    } catch (err) {
-      console.error('Error al actualizar la tarea:', err);
-      alert('No se pudo actualizar la tarea');
-    }
+    setEditingId(null);
+    setEditTitle('');
+    setEditDescription('');
   };
 
   // Cambiar estado completada/pendiente
-  const handleToggleComplete = async (task: Task) => {
-    try {
-      const res = await fetch('/api/tasks', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          id: task.id,
-          title: task.title,
-          description: task.description,
-          completed: !task.completed,
-        }),
-      });
-
-      if (!res.ok) {
-        const data = await res.json().catch(() => null);
-        alert(data?.error || 'No se pudo cambiar el estado');
-        return;
-      }
-
-      await fetchTasks();
-    } catch (err) {
-      console.error('Error al cambiar el estado:', err);
-    }
-  };
-
-  // Eliminar tarea
-  const handleDelete = async (id: string) => {
-    const taskToDelete = tasks.find((task) => task.id === id);
-
-    if (!taskToDelete) {
-      return;
-    }
-
-    const confirmed = window.confirm(
-      '¿Estás seguro de que deseas eliminar esta tarea?'
+  const handleToggleComplete = (task: Task) => {
+    setTasks((prev) =>
+      prev.map((t) =>
+        t.id === task.id ? { ...t, completed: !t.completed } : t
+      )
     );
-
-    if (!confirmed) {
-      return;
-    }
-
-    try {
-      const res = await fetch(`/api/tasks?id=${id}`, {
-        method: 'DELETE',
-      });
-
-      if (!res.ok) {
-        let errorMsg = 'No se pudo eliminar la tarea';
-
-        try {
-          const data = await res.json();
-
-          if (data?.error) {
-            errorMsg = data.error;
-          }
-        } catch {
-          // La API no devolvió JSON
-        }
-
-        alert(errorMsg);
-        return;
-      }
-
-      // Guardamos una copia local de la tarea eliminada
-      const deletedTask: DeletedTask = {
-        id: taskToDelete.id,
-        title: taskToDelete.title,
-        description:
-          taskToDelete.description || 'Sin descripción',
-        completed: taskToDelete.completed,
-        createdAt: taskToDelete.createdAt,
-      };
-
-      setDeletedTasks((prev) => [...prev, deletedTask]);
-
-      await fetchTasks();
-    } catch (err) {
-      console.error('Error al eliminar la tarea:', err);
-      alert('Ocurrió un error al eliminar la tarea');
-    }
   };
+
+    // Eliminar tarea
+    const handleDelete = (id: string) => {
+  const taskToDelete = tasks.find((task) => task.id === id);
+  if (!taskToDelete) return;
+
+  const confirmed = window.confirm(
+    '¿Estás seguro de que deseas eliminar esta tarea?'
+  );
+  if (!confirmed) return;
+
+  const deletedTask: DeletedTask = {
+    id: taskToDelete.id,
+    title: taskToDelete.title,
+    description: taskToDelete.description || 'Sin descripción',
+    completed: taskToDelete.completed,
+    createdAt: taskToDelete.createdAt,
+  };
+
+  setDeletedTasks((prev) => [...prev, deletedTask]);
+  setTasks((prev) => prev.filter((task) => task.id !== id));
+} 
 
   // Formatear fecha
   const formatDate = (date?: string) => {
@@ -239,14 +116,6 @@ export default function Home() {
 
     return parsedDate.toLocaleDateString('es-CO');
   };
-
-  if (loading) {
-    return <p className="p-8">Cargando tareas...</p>;
-  }
-
-  if (error) {
-    return <p className="p-8 text-red-500">{error}</p>;
-  }
 
   return (
     <main className="min-h-screen w-full max-w-4xl mx-auto bg-white dark:bg-slate-900 p-8 transition-colors">
