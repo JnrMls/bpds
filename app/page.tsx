@@ -35,40 +35,22 @@ export default function Home() {
 
 
   // Crear tarea con Enter
-  const handleKeyDown = async (
-    e: React.KeyboardEvent<HTMLInputElement>
-  ) => {
-    if (e.key !== 'Enter' || !title.trim()) {
-      return;
-    }
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key !== 'Enter' || !title.trim()) return;
 
-    try {
-      const res = await fetch('/api/tasks', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          title: title.trim(),
-          description: '',
-        }),
-      });
+    const newTask: Task = {
+      id: Date.now().toString(),
+      title: title.trim(),
+      description: '',
+      completed: false,
+      createdAt: new Date().toISOString(),
+    };
 
-      if (!res.ok) {
-        const data = await res.json().catch(() => null);
-        alert(data?.error || 'No se pudo crear la tarea');
-        return;
-      }
-
-      setTitle('');
-      setIsCreating(false);
-      await fetchTasks();
-    } catch (err) {
-      console.error('Error al guardar la tarea:', err);
-      alert('No se pudo crear la tarea');
-    }
+    setTasks((prev) => [...prev, newTask]);
+    setTitle('');
+    setIsCreating(false);
   };
-
+  
   // Actualizar tarea
   const handleUpdate = async (id: string) => {
     if (!editTitle.trim()) {
